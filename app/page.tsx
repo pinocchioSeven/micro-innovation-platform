@@ -17,11 +17,11 @@ const seed:Idea[]=[
 const nav=[['总览','⌂'],['提交建议','＋'],['我的建议','▣'],['建议广场','✦'],['审核管理','✓'],['系统管理','⚙'],['超级维护','◇']];
 export default function Home(){
 const[account,setAccount]=useState<Account|null>(null),[page,setPage]=useState('总览'),[items,setItems]=useState(seed),[filter,setFilter]=useState('全部'),[selected,setSelected]=useState<Idea|null>(null),[toast,setToast]=useState(''),[notice,setNotice]=useState(false),[query,setQuery]=useState(''),[userMenu,setUserMenu]=useState(false);
+const filtered=useMemo(()=>items.filter(x=>(filter==='全部'||x.status===filter)&&(x.title.includes(query)||x.desc.includes(query))),[items,filter,query]);
 if(!account)return <Login onLogin={setAccount}/>;
 const role=account.role;
 const flash=(s:string)=>{setToast(s);setTimeout(()=>setToast(''),2200)};
 const visible=nav.filter(([n])=>role==='灵感捕手'?!['审核管理','系统管理','超级维护'].includes(n):role==='建议初审'?!['系统管理','超级维护'].includes(n):true);
-const filtered=useMemo(()=>items.filter(x=>(filter==='全部'||x.status===filter)&&(x.title.includes(query)||x.desc.includes(query))),[items,filter,query]);
 const action=(id:string,status:Status,msg:string)=>{setItems(v=>v.map(x=>x.id===id?{...x,status}:x));setSelected(null);flash(msg)};
 const toggle=(id:string,key:'liked'|'collected')=>setItems(v=>v.map(x=>x.id===id?{...x,[key]:!x[key],likes:key==='liked'?x.likes+(x[key]?-1:1):x.likes,saved:key==='collected'?x.saved+(x[key]?-1:1):x.saved}:x));
 return <main className="shell"><aside className="side"><div className="brand"><b>微</b><div><strong>微创新</strong><small>INNOVATION HUB</small></div></div><nav>{visible.map(([n,i])=><button key={n} onClick={()=>setPage(n)} className={page===n?'active':''}><span>{i}</span>{n}{n==='审核管理'&&<em>5</em>}</button>)}</nav><div className="power"><span>本月创新力</span><strong>86</strong><i><b/></i><small>超过 78% 的同事</small></div><div className="user-wrap">{userMenu&&<div className="user-pop"><button onClick={()=>{setAccount(null);setUserMenu(false);setPage('总览')}}>↪ 退出登录</button></div>}<button className="user" onClick={()=>setUserMenu(!userMenu)}><i>{account.name[0]}</i><div><b>{account.name}</b><small>{role} · {account.points}积分</small></div><span>⌃</span></button></div></aside>
