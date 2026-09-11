@@ -1,0 +1,20 @@
+file:///C:/Users/77/Desktop/%E4%B8%AA%E4%BA%BA%E6%9D%90%E6%96%99/%E5%AE%9E%E4%B9%A0/%E4%B8%AD%E6%8E%A7/%E5%AE%9E%E4%B9%A0%E5%86%85%E5%AE%B9/4-%E5%BE%AE%E5%88%9B%E6%96%B0%E5%B9%B3%E5%8F%B0/%E6%96%87%E6%A1%A3/micro-innovation-platform/node_modules/.pnpm/vinext@1.0.0-beta.3_@vitejs_680ed2bd7d9573b4f606a6c88a9676d1/node_modules/vinext/dist/server/socket-error-backstop.js:186
+		throw err;
+		^
+
+Error: listen EADDRINUSE: address already in use 0.0.0.0:3000
+    at Server.setupListenHandle [as _listen2] (node:net:2167:16)
+    at listenInCluster (node:net:2224:12)
+    at node:net:2448:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:2203:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '0.0.0.0',
+  port: 3000
+}
+
+Node.js v24.19.0

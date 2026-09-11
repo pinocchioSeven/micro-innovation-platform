@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Connections Ver="1.5">
+	<Connection ConnectionName="seed" ProjectUUID="" ConnType="SQLITE" ServiceProvider="Default" DatabaseFileName="D:\project\micro-innovation-seed.db" UserName="wys" SettingsSavePath="C:\Users\wys\Documents\Navicat\SQLite\Servers\seed" SessionLimit="0" InitialSessionQueries="" AutoConnect="false" CipherName="" CipherLegacyPageSize="0" HTTP="false" Remarks=""/>
+</Connections>
+

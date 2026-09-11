@@ -1,0 +1,575 @@
+PRAGMA foreign_keys = OFF;
+BEGIN TRANSACTION;
+CREATE TABLE comments (
+  id TEXT PRIMARY KEY,
+  idea_id TEXT NOT NULL,
+  author_id TEXT NOT NULL,
+  parent_id TEXT,
+  reply_to_user_id TEXT,
+  content TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  deleted INTEGER NOT NULL DEFAULT 0 CHECK (deleted IN (0, 1)),
+  FOREIGN KEY (idea_id) REFERENCES ideas(id),
+  FOREIGN KEY (author_id) REFERENCES users(id),
+  FOREIGN KEY (parent_id) REFERENCES comments(id),
+  FOREIGN KEY (reply_to_user_id) REFERENCES users(id)
+);
+INSERT INTO "comments" VALUES('COMMENT-20251223-0001','MI-2026-031','USER-003',NULL,NULL,'这个问题在跨部门协作时很常见，建议试点时同步记录平均借用时长。','2025-12-23T15:38:00.000Z',0);
+INSERT INTO "comments" VALUES('COMMENT-20251223-0002','MI-2026-031','USER-003','COMMENT-20251223-0001','USER-003','收到，我会把借用时长和逾期次数都加入试点指标。','2025-12-23T15:46:00.000Z',0);
+INSERT INTO "comments" VALUES('COMMENT-20251223-0003','MI-2026-031','USER-004',NULL,NULL,'方案方向清晰，可以补充紧急借用场景下的审批规则。','2025-12-23T16:25:00.000Z',0);
+CREATE TABLE departments (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  enabled INTEGER NOT NULL DEFAULT 1 CHECK (enabled IN (0, 1))
+);
+INSERT INTO "departments" VALUES('DEPT-001','生产运营部',1);
+INSERT INTO "departments" VALUES('DEPT-002','智能制造部',1);
+INSERT INTO "departments" VALUES('DEPT-003','数字化中心',1);
+INSERT INTO "departments" VALUES('DEPT-004','综合管理部',1);
+INSERT INTO "departments" VALUES('DEPT-005','研发中心',1);
+INSERT INTO "departments" VALUES('DEPT-006','安全环保部',1);
+INSERT INTO "departments" VALUES('DEPT-007','质量管理部',1);
+INSERT INTO "departments" VALUES('DEPT-008','市场运营部',1);
+INSERT INTO "departments" VALUES('DEPT-009','供应链部',1);
+INSERT INTO "departments" VALUES('DEPT-010','财务管理部',1);
+INSERT INTO "departments" VALUES('DEPT-011','人力资源部',1);
+INSERT INTO "departments" VALUES('DEPT-012','客户服务部',1);
+INSERT INTO "departments" VALUES('DEPT-013','物流仓储部',1);
+INSERT INTO "departments" VALUES('DEPT-014','信息安全部',1);
+INSERT INTO "departments" VALUES('DEPT-015','工程建设部',1);
+CREATE TABLE idea_lifecycle_records (
+  id TEXT PRIMARY KEY,
+  idea_id TEXT NOT NULL,
+  action TEXT NOT NULL CHECK (action IN ('历史导入', '提交', '编辑', '初审通过', '初审退回', '终审通过', '终审退回', '重新提交')),
+  operator_id TEXT,
+  operator_role TEXT NOT NULL CHECK (operator_role IN ('灵感捕手', '建议初审', '建议终审')),
+  from_status TEXT CHECK (from_status IS NULL OR from_status IN ('待初审', '待终审', '已采纳', '已驳回')),
+  to_status TEXT NOT NULL CHECK (to_status IN ('待初审', '待终审', '已采纳', '已驳回')),
+  comment TEXT,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (idea_id) REFERENCES ideas(id),
+  FOREIGN KEY (operator_id) REFERENCES users(id)
+);
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-001','MI-2026-042','历史导入','USER-002','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-08-24T09:42:00+08:00');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-002','MI-2026-041','历史导入','USER-001','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-08-24T08:35:00+08:00');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-003','MI-2026-040','历史导入','USER-007','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-08-23T17:10:00+08:00');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-004','MI-2026-039','历史导入','USER-009','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-08-23T16:48:00+08:00');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-005','MI-2026-038','历史导入','USER-001','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-08-23T16:20:00+08:00');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-006','MI-2026-037','历史导入','USER-007','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-08-21T12:00:00+08:00');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-007','MI-2026-036','历史导入','USER-006','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-08-21T12:00:00+08:00');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-008','MI-2026-035','历史导入','USER-003','建议初审',NULL,'待终审','从原始静态数据导入','2026-08-20T12:00:00+08:00');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-009','MI-2026-034','历史导入','USER-009','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-08-20T12:00:00+08:00');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-010','MI-2026-033','历史导入','USER-004','建议终审',NULL,'待终审','从原始静态数据导入','2026-08-19T12:00:00+08:00');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-011','MI-2026-032','历史导入','USER-005','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-08-19T12:00:00+08:00');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-012','MI-2026-031','历史导入','USER-003','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-08-20T09:30:00');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-013','MI-2026-030','历史导入','USER-010','建议初审',NULL,'已采纳','原数据记录为建议初审处理','2026-08-19T11:20:00');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-014','MI-2026-029','历史导入','USER-001','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-08-19T08:40:00');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-015','MI-2026-028','历史导入','USER-006','建议初审',NULL,'已采纳','原数据记录为建议初审处理','2026-08-18T16:30:00');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-016','MI-2026-027','历史导入','USER-004','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-08-18T14:10:00');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-017','MI-2026-026','历史导入','USER-008','建议初审',NULL,'已采纳','原数据记录为建议初审处理','2026-08-17T10:00:00');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-018','MI-2026-024','历史导入','USER-004','建议终审',NULL,'已驳回','原数据记录为建议终审处理','2026-08-16T15:20:00');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-019','MI-2026-021','历史导入','USER-005','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-08-15T10:15:00');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-020','MI-2026-019','历史导入','USER-006','建议终审',NULL,'已驳回','原数据记录为建议终审处理','2026-08-14T09:40:00');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-021','MI-2026-043','历史导入','USER-001','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-01-01T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-022','MI-2026-044','历史导入','USER-023','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-01-08T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-023','MI-2026-045','历史导入','USER-038','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-01-17T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-024','MI-2026-046','历史导入','USER-001','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-01-23T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-025','MI-2026-047','历史导入','USER-023','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-01-29T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-026','MI-2026-048','历史导入','USER-038','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-02-05T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-027','MI-2026-049','历史导入','USER-001','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-02-14T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-028','MI-2026-050','历史导入','USER-023','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-02-20T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-029','MI-2026-051','历史导入','USER-038','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-02-26T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-030','MI-2026-052','历史导入','USER-001','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-03-05T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-031','MI-2026-053','历史导入','USER-023','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-03-14T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-032','MI-2026-054','历史导入','USER-038','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-03-20T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-033','MI-2026-055','历史导入','USER-016','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-03-26T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-034','MI-2026-056','历史导入','USER-031','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-04-02T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-035','MI-2026-057','历史导入','USER-046','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-04-11T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-036','MI-2026-058','历史导入','USER-002','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-04-17T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-037','MI-2026-059','历史导入','USER-016','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-04-23T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-038','MI-2026-060','历史导入','USER-031','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-04-30T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-039','MI-2026-061','历史导入','USER-046','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-05-09T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-040','MI-2026-062','历史导入','USER-002','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-05-15T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-041','MI-2026-063','历史导入','USER-016','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-05-21T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-042','MI-2026-064','历史导入','USER-031','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-05-28T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-043','MI-2026-065','历史导入','USER-046','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-06-06T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-044','MI-2026-066','历史导入','USER-002','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-06-12T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-045','MI-2026-067','历史导入','USER-032','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-06-18T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-046','MI-2026-068','历史导入','USER-047','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-06-25T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-047','MI-2026-069','历史导入','USER-003','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-07-04T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-048','MI-2026-070','历史导入','USER-017','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-07-10T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-049','MI-2026-071','历史导入','USER-032','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-07-16T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-050','MI-2026-072','历史导入','USER-047','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-07-23T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-051','MI-2026-073','历史导入','USER-003','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-08-01T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-052','MI-2026-074','历史导入','USER-017','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-08-07T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-053','MI-2026-075','历史导入','USER-032','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-08-13T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-054','MI-2026-076','历史导入','USER-047','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-08-20T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-055','MI-2026-077','历史导入','USER-003','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-01-07T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-056','MI-2026-078','历史导入','USER-017','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-01-13T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-057','MI-2026-079','历史导入','USER-007','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-01-19T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-058','MI-2026-080','历史导入','USER-021','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-01-26T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-059','MI-2026-081','历史导入','USER-036','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-02-04T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-060','MI-2026-082','历史导入','USER-007','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-02-10T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-061','MI-2026-083','历史导入','USER-021','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-02-16T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-062','MI-2026-084','历史导入','USER-036','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-02-23T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-063','MI-2026-085','历史导入','USER-007','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-03-04T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-064','MI-2026-086','历史导入','USER-021','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-03-10T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-065','MI-2026-087','历史导入','USER-036','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-03-16T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-066','MI-2026-088','历史导入','USER-007','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-03-23T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-067','MI-2026-089','历史导入','USER-021','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-04-01T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-068','MI-2026-090','历史导入','USER-036','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-04-07T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-069','MI-2026-091','历史导入','USER-006','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-04-13T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-070','MI-2026-092','历史导入','USER-020','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-04-20T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-071','MI-2026-093','历史导入','USER-035','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-04-29T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-072','MI-2026-094','历史导入','USER-050','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-05-05T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-073','MI-2026-095','历史导入','USER-006','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-05-11T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-074','MI-2026-096','历史导入','USER-020','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-05-18T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-075','MI-2026-097','历史导入','USER-035','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-05-27T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-076','MI-2026-098','历史导入','USER-050','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-06-02T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-077','MI-2026-099','历史导入','USER-006','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-06-08T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-078','MI-2026-100','历史导入','USER-020','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-06-15T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-079','MI-2026-101','历史导入','USER-035','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-06-24T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-080','MI-2026-102','历史导入','USER-050','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-06-30T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-081','MI-2026-103','历史导入','USER-039','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-07-06T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-082','MI-2026-104','历史导入','USER-009','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-07-13T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-083','MI-2026-105','历史导入','USER-024','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-07-22T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-084','MI-2026-106','历史导入','USER-039','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-07-28T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-085','MI-2026-107','历史导入','USER-009','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-08-03T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-086','MI-2026-108','历史导入','USER-024','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-08-10T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-087','MI-2026-109','历史导入','USER-039','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-08-19T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-088','MI-2026-110','历史导入','USER-009','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-01-03T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-089','MI-2026-111','历史导入','USER-024','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-01-09T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-090','MI-2026-112','历史导入','USER-039','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-01-16T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-091','MI-2026-113','历史导入','USER-009','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-01-25T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-092','MI-2026-114','历史导入','USER-024','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-01-31T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-093','MI-2026-115','历史导入','USER-033','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-02-06T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-094','MI-2026-116','历史导入','USER-048','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-02-13T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-095','MI-2026-117','历史导入','USER-004','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-02-22T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-096','MI-2026-118','历史导入','USER-018','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-02-28T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-097','MI-2026-119','历史导入','USER-033','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-03-06T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-098','MI-2026-120','历史导入','USER-048','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-03-13T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-099','MI-2026-121','历史导入','USER-004','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-03-22T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-100','MI-2026-122','历史导入','USER-018','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-03-28T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-101','MI-2026-123','历史导入','USER-033','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-04-03T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-102','MI-2026-124','历史导入','USER-048','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-04-10T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-103','MI-2026-125','历史导入','USER-004','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-04-19T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-104','MI-2026-126','历史导入','USER-018','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-04-25T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-105','MI-2026-127','历史导入','USER-049','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-05-01T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-106','MI-2026-128','历史导入','USER-005','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-05-08T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-107','MI-2026-129','历史导入','USER-019','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-05-17T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-108','MI-2026-130','历史导入','USER-034','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-05-23T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-109','MI-2026-131','历史导入','USER-049','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-05-29T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-110','MI-2026-132','历史导入','USER-005','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-06-05T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-111','MI-2026-133','历史导入','USER-019','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-06-14T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-112','MI-2026-134','历史导入','USER-034','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-06-20T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-113','MI-2026-135','历史导入','USER-049','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-06-26T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-114','MI-2026-136','历史导入','USER-005','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-07-03T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-115','MI-2026-137','历史导入','USER-019','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-07-12T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-116','MI-2026-138','历史导入','USER-034','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-07-18T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-117','MI-2026-139','历史导入','USER-042','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-07-24T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-118','MI-2026-140','历史导入','USER-012','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-07-31T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-119','MI-2026-141','历史导入','USER-027','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-08-09T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-120','MI-2026-142','历史导入','USER-042','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-08-15T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-121','MI-2026-143','历史导入','USER-012','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-08-21T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-122','MI-2026-144','历史导入','USER-027','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-01-06T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-123','MI-2026-145','历史导入','USER-042','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-01-15T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-124','MI-2026-146','历史导入','USER-012','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-01-21T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-125','MI-2026-147','历史导入','USER-027','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-01-27T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-126','MI-2026-148','历史导入','USER-042','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-02-03T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-127','MI-2026-149','历史导入','USER-012','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-02-12T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-128','MI-2026-150','历史导入','USER-027','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-02-18T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-129','MI-2026-151','历史导入','USER-008','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-02-24T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-130','MI-2026-152','历史导入','USER-022','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-03-03T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-131','MI-2026-153','历史导入','USER-037','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-03-12T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-132','MI-2026-154','历史导入','USER-008','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-03-18T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-133','MI-2026-155','历史导入','USER-022','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-03-24T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-134','MI-2026-156','历史导入','USER-037','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-03-31T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-135','MI-2026-157','历史导入','USER-008','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-04-09T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-136','MI-2026-158','历史导入','USER-022','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-04-15T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-137','MI-2026-159','历史导入','USER-037','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-04-21T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-138','MI-2026-160','历史导入','USER-008','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-04-28T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-139','MI-2026-161','历史导入','USER-022','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-05-07T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-140','MI-2026-162','历史导入','USER-037','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-05-13T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-141','MI-2026-163','历史导入','USER-025','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-05-19T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-142','MI-2026-164','历史导入','USER-040','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-05-26T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-143','MI-2026-165','历史导入','USER-010','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-06-04T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-144','MI-2026-166','历史导入','USER-025','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-06-10T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-145','MI-2026-167','历史导入','USER-040','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-06-16T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-146','MI-2026-168','历史导入','USER-010','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-06-23T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-147','MI-2026-169','历史导入','USER-025','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-07-02T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-148','MI-2026-170','历史导入','USER-040','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-07-08T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-149','MI-2026-171','历史导入','USER-010','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-07-14T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-150','MI-2026-172','历史导入','USER-025','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-07-21T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-151','MI-2026-173','历史导入','USER-040','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-07-30T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-152','MI-2026-174','历史导入','USER-010','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-08-05T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-153','MI-2026-175','历史导入','USER-041','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-08-11T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-154','MI-2026-176','历史导入','USER-011','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-08-18T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-155','MI-2026-177','历史导入','USER-026','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-01-05T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-156','MI-2026-178','历史导入','USER-041','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-01-11T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-157','MI-2026-179','历史导入','USER-011','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-01-17T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-158','MI-2026-180','历史导入','USER-026','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-01-24T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-159','MI-2026-181','历史导入','USER-041','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-02-02T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-160','MI-2026-182','历史导入','USER-011','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-02-08T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-161','MI-2026-183','历史导入','USER-026','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-02-14T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-162','MI-2026-184','历史导入','USER-041','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-02-21T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-163','MI-2026-185','历史导入','USER-011','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-03-02T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-164','MI-2026-186','历史导入','USER-026','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-03-08T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-165','MI-2026-187','历史导入','USER-013','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-03-14T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-166','MI-2026-188','历史导入','USER-028','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-03-21T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-167','MI-2026-189','历史导入','USER-043','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-03-30T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-168','MI-2026-190','历史导入','USER-013','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-04-05T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-169','MI-2026-191','历史导入','USER-028','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-04-11T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-170','MI-2026-192','历史导入','USER-043','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-04-18T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-171','MI-2026-193','历史导入','USER-013','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-04-27T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-172','MI-2026-194','历史导入','USER-028','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-05-03T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-173','MI-2026-195','历史导入','USER-043','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-05-09T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-174','MI-2026-196','历史导入','USER-013','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-05-16T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-175','MI-2026-197','历史导入','USER-028','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-05-25T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-176','MI-2026-198','历史导入','USER-043','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-05-31T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-177','MI-2026-199','历史导入','USER-029','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-06-06T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-178','MI-2026-200','历史导入','USER-044','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-06-13T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-179','MI-2026-201','历史导入','USER-014','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-06-22T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-180','MI-2026-202','历史导入','USER-029','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-06-28T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-181','MI-2026-203','历史导入','USER-044','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-07-04T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-182','MI-2026-204','历史导入','USER-014','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-07-11T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-183','MI-2026-205','历史导入','USER-029','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-07-20T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-184','MI-2026-206','历史导入','USER-044','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-07-26T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-185','MI-2026-207','历史导入','USER-014','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-08-01T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-186','MI-2026-208','历史导入','USER-029','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-08-08T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-187','MI-2026-209','历史导入','USER-044','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-08-17T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-188','MI-2026-210','历史导入','USER-014','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-08-23T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-189','MI-2026-211','历史导入','USER-045','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-01-07T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-190','MI-2026-212','历史导入','USER-015','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-01-14T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-191','MI-2026-213','历史导入','USER-030','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-01-23T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-192','MI-2026-214','历史导入','USER-045','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-01-29T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-193','MI-2026-215','历史导入','USER-015','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-02-04T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-194','MI-2026-216','历史导入','USER-030','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-02-11T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-195','MI-2026-217','历史导入','USER-045','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-02-20T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-196','MI-2026-218','历史导入','USER-015','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-02-26T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-197','MI-2026-219','历史导入','USER-030','灵感捕手',NULL,'待初审','从原始静态数据导入','2026-03-04T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-198','MI-2026-220','历史导入','USER-045','灵感捕手',NULL,'待终审','从原始静态数据导入','2026-03-11T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-199','MI-2026-221','历史导入','USER-015','建议终审',NULL,'已采纳','原数据记录为建议终审处理','2026-03-20T00:00:00.000Z');
+INSERT INTO "idea_lifecycle_records" VALUES('LIFECYCLE-IMPORT-200','MI-2026-222','历史导入','USER-030','建议初审',NULL,'已驳回','原数据记录为建议初审处理','2026-03-26T00:00:00.000Z');
+CREATE TABLE idea_user_actions (
+  id TEXT PRIMARY KEY,
+  idea_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  action_type TEXT NOT NULL CHECK (action_type IN ('liked', 'collection')),
+  created_at TEXT NOT NULL,
+  UNIQUE (idea_id, user_id, action_type),
+  FOREIGN KEY (idea_id) REFERENCES ideas(id),
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+INSERT INTO "idea_user_actions" VALUES('ACTION-SEED-001','MI-2026-031','USER-003','liked','2026-08-25T00:00:00.000Z');
+CREATE TABLE ideas (
+  id TEXT PRIMARY KEY,
+  author_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  plan TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('待初审', '待终审', '已采纳', '已驳回')),
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (author_id) REFERENCES users(id)
+);
+INSERT INTO "ideas" VALUES('MI-2026-042','USER-002','优化跨部门设备借用流程','设备借用依赖纸质登记，信息同步不及时，归还节点也难以追踪。','上线统一预约看板，绑定责任人并在归还前自动提醒。','待初审','2026-08-24T09:42:00+08:00');
+INSERT INTO "ideas" VALUES('MI-2026-041','USER-001','生产异常信息移动端快速上报','生产现场出现异常后需要返回工位填写记录，信息传递较慢。','提供移动端扫码上报入口，自动关联设备、产线和当班责任人。','待初审','2026-08-24T08:35:00+08:00');
+INSERT INTO "ideas" VALUES('MI-2026-040','USER-007','设备点检任务增加到期提醒','设备点检主要依靠纸质计划，容易遗漏临近到期的检查任务。','建立数字化点检清单，并在到期前向负责人发送提醒。','待初审','2026-08-23T17:10:00+08:00');
+INSERT INTO "ideas" VALUES('MI-2026-039','USER-009','供应商资料统一归档与检索','供应商资质和合同分散在不同人员处，查找资料耗时较长。','按供应商建立统一电子档案，支持标签分类和到期提醒。','待初审','2026-08-23T16:48:00+08:00');
+INSERT INTO "ideas" VALUES('MI-2026-038','USER-001','生产晨会增加三分钟改善分享','一线的小改善缺少轻量分享渠道，优秀经验难以快速复制。','每天由一个班组分享一项可复用改进，沉淀为现场知识卡片。','待终审','2026-08-23T16:20:00+08:00');
+INSERT INTO "ideas" VALUES('MI-2026-037','USER-007','质量问题照片自动关联工单','质量异常照片单独保存在手机中，后续难以对应具体产品和工单。','拍照时扫描工单二维码，自动绑定批次、工位和异常类型。','待终审','2026-08-21T12:00:00+08:00');
+INSERT INTO "ideas" VALUES('MI-2026-036','USER-006','危险作业审批增加天气风险提示','户外危险作业审批时需要人工查询天气，极端天气风险容易被忽略。','审批页面自动获取天气预警，并对高温、大风和雷电作业进行提示。','待终审','2026-08-21T12:00:00+08:00');
+INSERT INTO "ideas" VALUES('MI-2026-035','USER-003','员工常见问题建立智能知识卡片','员工重复咨询报销、考勤和系统操作问题，占用大量沟通时间。','整理高频问题形成知识卡片，通过关键词检索快速查看标准答案。','待终审','2026-08-20T12:00:00+08:00');
+INSERT INTO "ideas" VALUES('MI-2026-034','USER-009','物流车辆入厂预约错峰管理','物流车辆集中到厂时容易在门岗排队，影响卸货效率和道路通行。','按卸货能力开放预约时段，向司机推送建议到厂时间。','待初审','2026-08-20T12:00:00+08:00');
+INSERT INTO "ideas" VALUES('MI-2026-033','USER-004','办公区域照明按使用状态自动关闭','会议区和公共办公区下班后偶尔长时间亮灯，造成能源浪费。','结合人体感应和时间策略关闭无人区域照明，并保留手动控制。','待终审','2026-08-19T12:00:00+08:00');
+INSERT INTO "ideas" VALUES('MI-2026-032','USER-005','研发测试设备共享预约看板','测试设备由不同项目组分别管理，设备空闲情况不透明，存在重复采购。','建立共享预约看板，展示设备状态、使用人和预计释放时间。','待初审','2026-08-19T12:00:00+08:00');
+INSERT INTO "ideas" VALUES('MI-2026-031','USER-003','会议室无人使用自动释放','会议室被预约后经常无人使用，临时会议却找不到可用空间。','预约开始10分钟内无人签到，系统自动释放并通知预约人。','已采纳','2026-08-18T12:00:00+08:00');
+INSERT INTO "ideas" VALUES('MI-2026-030','USER-010','报销单据扫码自动识别填报','员工报销需要手工录入发票号码、金额和日期，重复操作较多。','扫描发票自动识别关键字段，并校验重复报销和金额一致性。','已采纳','2026-08-18T12:00:00+08:00');
+INSERT INTO "ideas" VALUES('MI-2026-029','USER-001','生产换线工具定点颜色管理','换线工具使用后摆放位置不统一，寻找和清点会占用准备时间。','按产线划分颜色和固定位置，使用轮廓标识提示工具归位。','已采纳','2026-08-17T12:00:00+08:00');
+INSERT INTO "ideas" VALUES('MI-2026-028','USER-006','安全隐患随手拍闭环跟踪','现场隐患通过聊天工具反馈后，整改责任和完成情况难以持续追踪。','扫码提交隐患照片和位置，自动分派责任人并记录整改验收过程。','已采纳','2026-08-17T12:00:00+08:00');
+INSERT INTO "ideas" VALUES('MI-2026-027','USER-004','办公耗材设置低库存提醒','耗材补充依赖人工巡查，偶尔出现打印纸或墨盒临时短缺。','设置安全库存阈值，低于阈值时自动形成采购提醒。','已采纳','2026-08-16T12:00:00+08:00');
+INSERT INTO "ideas" VALUES('MI-2026-026','USER-008','客户反馈按产品类型自动分派','客户反馈由人工转发给不同产品负责人，处理过程容易延迟。','根据产品、问题类型和区域自动分派，并设置超时升级提醒。','已采纳','2026-08-15T12:00:00+08:00');
+INSERT INTO "ideas" VALUES('MI-2026-024','USER-004','工位空调温度分区设置','同一区域不同工位对温度需求差异较大，频繁调整影响舒适度和能耗。','按照日照和人员密度进行温度分区，并限制合理调节范围。','已驳回','2026-08-14T12:00:00+08:00');
+INSERT INTO "ideas" VALUES('MI-2026-021','USER-005','项目周报自动汇总关键进展','项目成员分别填写周报后仍需人工整理进度、风险和下周计划。','按固定模板提取关键字段，自动生成项目汇总和风险清单。','已驳回','2026-08-13T12:00:00+08:00');
+INSERT INTO "ideas" VALUES('MI-2026-019','USER-006','访客登记信息一次录入','访客在不同区域重复填写相同信息，体验不佳。','通过访客码复用已授权信息。','已驳回','2026-08-12T12:00:00+08:00');
+INSERT INTO "ideas" VALUES('MI-2026-043','USER-001','产线换型现场扫码填报优化','在产线换型相关工作中，现场情况发生后仍需回到电脑端补录，记录容易延迟或遗漏。这一问题影响了产线换型工作的及时性和可追溯性。','设置移动端扫码入口，自动带出业务对象和责任人，提交后同步形成记录。实施时先在产线换型业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-01-01T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-044','USER-023','产线换型关键节点分级提醒','在产线换型相关工作中，重要节点依靠个人记忆跟进，繁忙时容易错过处理时限。这一问题影响了产线换型工作的及时性和可追溯性。','按事项影响程度设置提醒频次，临期通知负责人，逾期同步提醒管理人员。实施时先在产线换型业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-01-08T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-045','USER-038','产线换型业务状态实时看板','在产线换型相关工作中，负责人无法快速掌握整体进展，临时询问和重复统计较多。这一问题影响了产线换型工作的及时性和可追溯性。','汇总当前状态、责任人和计划完成时间，用颜色标记风险与阻塞事项。实施时先在产线换型业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-01-15T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-046','USER-001','产线换型异常指标阈值预警','在产线换型相关工作中，异常通常在结果复盘时才被发现，缺少提前干预窗口。这一问题影响了产线换型工作的及时性和可追溯性。','为关键指标设置合理上下限，触发后自动生成待办并保留处置过程。实施时先在产线换型业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-01-22T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-047','USER-023','产线换型资料标签分类规范','在产线换型相关工作中，资料命名和归档方式不统一，新成员查找历史记录耗时。这一问题影响了产线换型工作的及时性和可追溯性。','统一命名、标签和归档目录，补充维护责任人和定期清理机制。实施时先在产线换型业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-01-29T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-048','USER-038','产线换型对象二维码追溯','在产线换型相关工作中，实物、单据和处理记录之间缺少稳定关联，追溯需要多方核对。这一问题影响了产线换型工作的及时性和可追溯性。','为业务对象生成唯一二维码，扫码即可查看来源、状态及完整处理轨迹。实施时先在产线换型业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-02-05T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-049','USER-001','产线换型跨部门交接清单','在产线换型相关工作中，跨部门交接边界不清晰，事项经常停留在口头确认阶段。这一问题影响了产线换型工作的及时性和可追溯性。','将交接内容拆成可勾选清单，交出方和接收方在线确认后才完成流转。实施时先在产线换型业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-02-12T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-050','USER-023','产线换型超时事项升级处理','在产线换型相关工作中，任务逾期后没有自动升级，问题容易长期停留在原处理人处。这一问题影响了产线换型工作的及时性和可追溯性。','设置逐级升级规则，超时事项自动转交上级关注并记录升级原因。实施时先在产线换型业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-02-19T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-051','USER-038','产线换型经验知识卡片沉淀','在产线换型相关工作中，成熟做法散落在个人文件中，相似问题发生时仍需从头摸索。这一问题影响了产线换型工作的及时性和可追溯性。','将常见问题、适用条件和解决步骤整理成知识卡片，支持搜索和评价。实施时先在产线换型业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-02-26T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-052','USER-001','产线换型资源预约释放优化','在产线换型相关工作中，资源被预约后未实际使用，其他有需求的人员无法及时获取。这一问题影响了产线换型工作的及时性和可追溯性。','增加签到和自动释放规则，根据实际占用情况动态开放可用资源。实施时先在产线换型业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-03-05T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-053','USER-023','产线换型关键指标趋势分析','在产线换型相关工作中，日常数据只做单次统计，难以识别持续波动和周期性问题。这一问题影响了产线换型工作的及时性和可追溯性。','按周、月展示趋势和同比变化，对连续异常指标自动提示复盘。实施时先在产线换型业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-03-12T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-054','USER-038','产线换型处理结果满意度评价','在产线换型相关工作中，流程结束后缺少使用者反馈，实际效果和改进空间无法量化。这一问题影响了产线换型工作的及时性和可追溯性。','流程完成后邀请相关人员评分并填写原因，低分事项自动进入改善清单。实施时先在产线换型业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-03-19T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-055','USER-016','设备预测维护现场扫码填报优化','在设备预测维护相关工作中，现场情况发生后仍需回到电脑端补录，记录容易延迟或遗漏。这一问题影响了设备预测维护工作的及时性和可追溯性。','设置移动端扫码入口，自动带出业务对象和责任人，提交后同步形成记录。实施时先在设备预测维护业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-03-26T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-056','USER-031','设备预测维护关键节点分级提醒','在设备预测维护相关工作中，重要节点依靠个人记忆跟进，繁忙时容易错过处理时限。这一问题影响了设备预测维护工作的及时性和可追溯性。','按事项影响程度设置提醒频次，临期通知负责人，逾期同步提醒管理人员。实施时先在设备预测维护业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-04-02T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-057','USER-046','设备预测维护业务状态实时看板','在设备预测维护相关工作中，负责人无法快速掌握整体进展，临时询问和重复统计较多。这一问题影响了设备预测维护工作的及时性和可追溯性。','汇总当前状态、责任人和计划完成时间，用颜色标记风险与阻塞事项。实施时先在设备预测维护业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-04-09T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-058','USER-002','设备预测维护异常指标阈值预警','在设备预测维护相关工作中，异常通常在结果复盘时才被发现，缺少提前干预窗口。这一问题影响了设备预测维护工作的及时性和可追溯性。','为关键指标设置合理上下限，触发后自动生成待办并保留处置过程。实施时先在设备预测维护业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-04-16T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-059','USER-016','设备预测维护资料标签分类规范','在设备预测维护相关工作中，资料命名和归档方式不统一，新成员查找历史记录耗时。这一问题影响了设备预测维护工作的及时性和可追溯性。','统一命名、标签和归档目录，补充维护责任人和定期清理机制。实施时先在设备预测维护业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-04-23T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-060','USER-031','设备预测维护对象二维码追溯','在设备预测维护相关工作中，实物、单据和处理记录之间缺少稳定关联，追溯需要多方核对。这一问题影响了设备预测维护工作的及时性和可追溯性。','为业务对象生成唯一二维码，扫码即可查看来源、状态及完整处理轨迹。实施时先在设备预测维护业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-04-30T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-061','USER-046','设备预测维护跨部门交接清单','在设备预测维护相关工作中，跨部门交接边界不清晰，事项经常停留在口头确认阶段。这一问题影响了设备预测维护工作的及时性和可追溯性。','将交接内容拆成可勾选清单，交出方和接收方在线确认后才完成流转。实施时先在设备预测维护业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-05-07T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-062','USER-002','设备预测维护超时事项升级处理','在设备预测维护相关工作中，任务逾期后没有自动升级，问题容易长期停留在原处理人处。这一问题影响了设备预测维护工作的及时性和可追溯性。','设置逐级升级规则，超时事项自动转交上级关注并记录升级原因。实施时先在设备预测维护业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-05-14T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-063','USER-016','设备预测维护经验知识卡片沉淀','在设备预测维护相关工作中，成熟做法散落在个人文件中，相似问题发生时仍需从头摸索。这一问题影响了设备预测维护工作的及时性和可追溯性。','将常见问题、适用条件和解决步骤整理成知识卡片，支持搜索和评价。实施时先在设备预测维护业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-05-21T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-064','USER-031','设备预测维护资源预约释放优化','在设备预测维护相关工作中，资源被预约后未实际使用，其他有需求的人员无法及时获取。这一问题影响了设备预测维护工作的及时性和可追溯性。','增加签到和自动释放规则，根据实际占用情况动态开放可用资源。实施时先在设备预测维护业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-05-28T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-065','USER-046','设备预测维护关键指标趋势分析','在设备预测维护相关工作中，日常数据只做单次统计，难以识别持续波动和周期性问题。这一问题影响了设备预测维护工作的及时性和可追溯性。','按周、月展示趋势和同比变化，对连续异常指标自动提示复盘。实施时先在设备预测维护业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-06-04T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-066','USER-002','设备预测维护处理结果满意度评价','在设备预测维护相关工作中，流程结束后缺少使用者反馈，实际效果和改进空间无法量化。这一问题影响了设备预测维护工作的及时性和可追溯性。','流程完成后邀请相关人员评分并填写原因，低分事项自动进入改善清单。实施时先在设备预测维护业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-06-11T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-067','USER-032','数据报表治理现场扫码填报优化','在数据报表治理相关工作中，现场情况发生后仍需回到电脑端补录，记录容易延迟或遗漏。这一问题影响了数据报表治理工作的及时性和可追溯性。','设置移动端扫码入口，自动带出业务对象和责任人，提交后同步形成记录。实施时先在数据报表治理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-06-18T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-068','USER-047','数据报表治理关键节点分级提醒','在数据报表治理相关工作中，重要节点依靠个人记忆跟进，繁忙时容易错过处理时限。这一问题影响了数据报表治理工作的及时性和可追溯性。','按事项影响程度设置提醒频次，临期通知负责人，逾期同步提醒管理人员。实施时先在数据报表治理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-06-25T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-069','USER-003','数据报表治理业务状态实时看板','在数据报表治理相关工作中，负责人无法快速掌握整体进展，临时询问和重复统计较多。这一问题影响了数据报表治理工作的及时性和可追溯性。','汇总当前状态、责任人和计划完成时间，用颜色标记风险与阻塞事项。实施时先在数据报表治理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-07-02T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-070','USER-017','数据报表治理异常指标阈值预警','在数据报表治理相关工作中，异常通常在结果复盘时才被发现，缺少提前干预窗口。这一问题影响了数据报表治理工作的及时性和可追溯性。','为关键指标设置合理上下限，触发后自动生成待办并保留处置过程。实施时先在数据报表治理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-07-09T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-071','USER-032','数据报表治理资料标签分类规范','在数据报表治理相关工作中，资料命名和归档方式不统一，新成员查找历史记录耗时。这一问题影响了数据报表治理工作的及时性和可追溯性。','统一命名、标签和归档目录，补充维护责任人和定期清理机制。实施时先在数据报表治理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-07-16T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-072','USER-047','数据报表治理对象二维码追溯','在数据报表治理相关工作中，实物、单据和处理记录之间缺少稳定关联，追溯需要多方核对。这一问题影响了数据报表治理工作的及时性和可追溯性。','为业务对象生成唯一二维码，扫码即可查看来源、状态及完整处理轨迹。实施时先在数据报表治理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-07-23T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-073','USER-003','数据报表治理跨部门交接清单','在数据报表治理相关工作中，跨部门交接边界不清晰，事项经常停留在口头确认阶段。这一问题影响了数据报表治理工作的及时性和可追溯性。','将交接内容拆成可勾选清单，交出方和接收方在线确认后才完成流转。实施时先在数据报表治理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-07-30T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-074','USER-017','数据报表治理超时事项升级处理','在数据报表治理相关工作中，任务逾期后没有自动升级，问题容易长期停留在原处理人处。这一问题影响了数据报表治理工作的及时性和可追溯性。','设置逐级升级规则，超时事项自动转交上级关注并记录升级原因。实施时先在数据报表治理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-08-06T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-075','USER-032','数据报表治理经验知识卡片沉淀','在数据报表治理相关工作中，成熟做法散落在个人文件中，相似问题发生时仍需从头摸索。这一问题影响了数据报表治理工作的及时性和可追溯性。','将常见问题、适用条件和解决步骤整理成知识卡片，支持搜索和评价。实施时先在数据报表治理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-08-13T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-076','USER-047','数据报表治理资源预约释放优化','在数据报表治理相关工作中，资源被预约后未实际使用，其他有需求的人员无法及时获取。这一问题影响了数据报表治理工作的及时性和可追溯性。','增加签到和自动释放规则，根据实际占用情况动态开放可用资源。实施时先在数据报表治理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-08-20T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-077','USER-003','数据报表治理关键指标趋势分析','在数据报表治理相关工作中，日常数据只做单次统计，难以识别持续波动和周期性问题。这一问题影响了数据报表治理工作的及时性和可追溯性。','按周、月展示趋势和同比变化，对连续异常指标自动提示复盘。实施时先在数据报表治理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-01-05T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-078','USER-017','数据报表治理处理结果满意度评价','在数据报表治理相关工作中，流程结束后缺少使用者反馈，实际效果和改进空间无法量化。这一问题影响了数据报表治理工作的及时性和可追溯性。','流程完成后邀请相关人员评分并填写原因，低分事项自动进入改善清单。实施时先在数据报表治理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-01-12T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-079','USER-007','检验过程优化现场扫码填报优化','在检验过程优化相关工作中，现场情况发生后仍需回到电脑端补录，记录容易延迟或遗漏。这一问题影响了检验过程优化工作的及时性和可追溯性。','设置移动端扫码入口，自动带出业务对象和责任人，提交后同步形成记录。实施时先在检验过程优化业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-01-19T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-080','USER-021','检验过程优化关键节点分级提醒','在检验过程优化相关工作中，重要节点依靠个人记忆跟进，繁忙时容易错过处理时限。这一问题影响了检验过程优化工作的及时性和可追溯性。','按事项影响程度设置提醒频次，临期通知负责人，逾期同步提醒管理人员。实施时先在检验过程优化业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-01-26T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-081','USER-036','检验过程优化业务状态实时看板','在检验过程优化相关工作中，负责人无法快速掌握整体进展，临时询问和重复统计较多。这一问题影响了检验过程优化工作的及时性和可追溯性。','汇总当前状态、责任人和计划完成时间，用颜色标记风险与阻塞事项。实施时先在检验过程优化业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-02-02T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-082','USER-007','检验过程优化异常指标阈值预警','在检验过程优化相关工作中，异常通常在结果复盘时才被发现，缺少提前干预窗口。这一问题影响了检验过程优化工作的及时性和可追溯性。','为关键指标设置合理上下限，触发后自动生成待办并保留处置过程。实施时先在检验过程优化业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-02-09T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-083','USER-021','检验过程优化资料标签分类规范','在检验过程优化相关工作中，资料命名和归档方式不统一，新成员查找历史记录耗时。这一问题影响了检验过程优化工作的及时性和可追溯性。','统一命名、标签和归档目录，补充维护责任人和定期清理机制。实施时先在检验过程优化业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-02-16T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-084','USER-036','检验过程优化对象二维码追溯','在检验过程优化相关工作中，实物、单据和处理记录之间缺少稳定关联，追溯需要多方核对。这一问题影响了检验过程优化工作的及时性和可追溯性。','为业务对象生成唯一二维码，扫码即可查看来源、状态及完整处理轨迹。实施时先在检验过程优化业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-02-23T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-085','USER-007','检验过程优化跨部门交接清单','在检验过程优化相关工作中，跨部门交接边界不清晰，事项经常停留在口头确认阶段。这一问题影响了检验过程优化工作的及时性和可追溯性。','将交接内容拆成可勾选清单，交出方和接收方在线确认后才完成流转。实施时先在检验过程优化业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-03-02T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-086','USER-021','检验过程优化超时事项升级处理','在检验过程优化相关工作中，任务逾期后没有自动升级，问题容易长期停留在原处理人处。这一问题影响了检验过程优化工作的及时性和可追溯性。','设置逐级升级规则，超时事项自动转交上级关注并记录升级原因。实施时先在检验过程优化业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-03-09T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-087','USER-036','检验过程优化经验知识卡片沉淀','在检验过程优化相关工作中，成熟做法散落在个人文件中，相似问题发生时仍需从头摸索。这一问题影响了检验过程优化工作的及时性和可追溯性。','将常见问题、适用条件和解决步骤整理成知识卡片，支持搜索和评价。实施时先在检验过程优化业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-03-16T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-088','USER-007','检验过程优化资源预约释放优化','在检验过程优化相关工作中，资源被预约后未实际使用，其他有需求的人员无法及时获取。这一问题影响了检验过程优化工作的及时性和可追溯性。','增加签到和自动释放规则，根据实际占用情况动态开放可用资源。实施时先在检验过程优化业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-03-23T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-089','USER-021','检验过程优化关键指标趋势分析','在检验过程优化相关工作中，日常数据只做单次统计，难以识别持续波动和周期性问题。这一问题影响了检验过程优化工作的及时性和可追溯性。','按周、月展示趋势和同比变化，对连续异常指标自动提示复盘。实施时先在检验过程优化业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-03-30T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-090','USER-036','检验过程优化处理结果满意度评价','在检验过程优化相关工作中，流程结束后缺少使用者反馈，实际效果和改进空间无法量化。这一问题影响了检验过程优化工作的及时性和可追溯性。','流程完成后邀请相关人员评分并填写原因，低分事项自动进入改善清单。实施时先在检验过程优化业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-04-06T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-091','USER-006','作业风险预警现场扫码填报优化','在作业风险预警相关工作中，现场情况发生后仍需回到电脑端补录，记录容易延迟或遗漏。这一问题影响了作业风险预警工作的及时性和可追溯性。','设置移动端扫码入口，自动带出业务对象和责任人，提交后同步形成记录。实施时先在作业风险预警业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-04-13T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-092','USER-020','作业风险预警关键节点分级提醒','在作业风险预警相关工作中，重要节点依靠个人记忆跟进，繁忙时容易错过处理时限。这一问题影响了作业风险预警工作的及时性和可追溯性。','按事项影响程度设置提醒频次，临期通知负责人，逾期同步提醒管理人员。实施时先在作业风险预警业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-04-20T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-093','USER-035','作业风险预警业务状态实时看板','在作业风险预警相关工作中，负责人无法快速掌握整体进展，临时询问和重复统计较多。这一问题影响了作业风险预警工作的及时性和可追溯性。','汇总当前状态、责任人和计划完成时间，用颜色标记风险与阻塞事项。实施时先在作业风险预警业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-04-27T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-094','USER-050','作业风险预警异常指标阈值预警','在作业风险预警相关工作中，异常通常在结果复盘时才被发现，缺少提前干预窗口。这一问题影响了作业风险预警工作的及时性和可追溯性。','为关键指标设置合理上下限，触发后自动生成待办并保留处置过程。实施时先在作业风险预警业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-05-04T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-095','USER-006','作业风险预警资料标签分类规范','在作业风险预警相关工作中，资料命名和归档方式不统一，新成员查找历史记录耗时。这一问题影响了作业风险预警工作的及时性和可追溯性。','统一命名、标签和归档目录，补充维护责任人和定期清理机制。实施时先在作业风险预警业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-05-11T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-096','USER-020','作业风险预警对象二维码追溯','在作业风险预警相关工作中，实物、单据和处理记录之间缺少稳定关联，追溯需要多方核对。这一问题影响了作业风险预警工作的及时性和可追溯性。','为业务对象生成唯一二维码，扫码即可查看来源、状态及完整处理轨迹。实施时先在作业风险预警业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-05-18T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-097','USER-035','作业风险预警跨部门交接清单','在作业风险预警相关工作中，跨部门交接边界不清晰，事项经常停留在口头确认阶段。这一问题影响了作业风险预警工作的及时性和可追溯性。','将交接内容拆成可勾选清单，交出方和接收方在线确认后才完成流转。实施时先在作业风险预警业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-05-25T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-098','USER-050','作业风险预警超时事项升级处理','在作业风险预警相关工作中，任务逾期后没有自动升级，问题容易长期停留在原处理人处。这一问题影响了作业风险预警工作的及时性和可追溯性。','设置逐级升级规则，超时事项自动转交上级关注并记录升级原因。实施时先在作业风险预警业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-06-01T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-099','USER-006','作业风险预警经验知识卡片沉淀','在作业风险预警相关工作中，成熟做法散落在个人文件中，相似问题发生时仍需从头摸索。这一问题影响了作业风险预警工作的及时性和可追溯性。','将常见问题、适用条件和解决步骤整理成知识卡片，支持搜索和评价。实施时先在作业风险预警业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-06-08T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-100','USER-020','作业风险预警资源预约释放优化','在作业风险预警相关工作中，资源被预约后未实际使用，其他有需求的人员无法及时获取。这一问题影响了作业风险预警工作的及时性和可追溯性。','增加签到和自动释放规则，根据实际占用情况动态开放可用资源。实施时先在作业风险预警业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-06-15T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-101','USER-035','作业风险预警关键指标趋势分析','在作业风险预警相关工作中，日常数据只做单次统计，难以识别持续波动和周期性问题。这一问题影响了作业风险预警工作的及时性和可追溯性。','按周、月展示趋势和同比变化，对连续异常指标自动提示复盘。实施时先在作业风险预警业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-06-22T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-102','USER-050','作业风险预警处理结果满意度评价','在作业风险预警相关工作中，流程结束后缺少使用者反馈，实际效果和改进空间无法量化。这一问题影响了作业风险预警工作的及时性和可追溯性。','流程完成后邀请相关人员评分并填写原因，低分事项自动进入改善清单。实施时先在作业风险预警业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-06-29T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-103','USER-039','供应协同现场扫码填报优化','在供应协同相关工作中，现场情况发生后仍需回到电脑端补录，记录容易延迟或遗漏。这一问题影响了供应协同工作的及时性和可追溯性。','设置移动端扫码入口，自动带出业务对象和责任人，提交后同步形成记录。实施时先在供应协同业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-07-06T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-104','USER-009','供应协同关键节点分级提醒','在供应协同相关工作中，重要节点依靠个人记忆跟进，繁忙时容易错过处理时限。这一问题影响了供应协同工作的及时性和可追溯性。','按事项影响程度设置提醒频次，临期通知负责人，逾期同步提醒管理人员。实施时先在供应协同业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-07-13T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-105','USER-024','供应协同业务状态实时看板','在供应协同相关工作中，负责人无法快速掌握整体进展，临时询问和重复统计较多。这一问题影响了供应协同工作的及时性和可追溯性。','汇总当前状态、责任人和计划完成时间，用颜色标记风险与阻塞事项。实施时先在供应协同业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-07-20T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-106','USER-039','供应协同异常指标阈值预警','在供应协同相关工作中，异常通常在结果复盘时才被发现，缺少提前干预窗口。这一问题影响了供应协同工作的及时性和可追溯性。','为关键指标设置合理上下限，触发后自动生成待办并保留处置过程。实施时先在供应协同业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-07-27T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-107','USER-009','供应协同资料标签分类规范','在供应协同相关工作中，资料命名和归档方式不统一，新成员查找历史记录耗时。这一问题影响了供应协同工作的及时性和可追溯性。','统一命名、标签和归档目录，补充维护责任人和定期清理机制。实施时先在供应协同业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-08-03T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-108','USER-024','供应协同对象二维码追溯','在供应协同相关工作中，实物、单据和处理记录之间缺少稳定关联，追溯需要多方核对。这一问题影响了供应协同工作的及时性和可追溯性。','为业务对象生成唯一二维码，扫码即可查看来源、状态及完整处理轨迹。实施时先在供应协同业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-08-10T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-109','USER-039','供应协同跨部门交接清单','在供应协同相关工作中，跨部门交接边界不清晰，事项经常停留在口头确认阶段。这一问题影响了供应协同工作的及时性和可追溯性。','将交接内容拆成可勾选清单，交出方和接收方在线确认后才完成流转。实施时先在供应协同业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-08-17T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-110','USER-009','供应协同超时事项升级处理','在供应协同相关工作中，任务逾期后没有自动升级，问题容易长期停留在原处理人处。这一问题影响了供应协同工作的及时性和可追溯性。','设置逐级升级规则，超时事项自动转交上级关注并记录升级原因。实施时先在供应协同业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-01-02T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-111','USER-024','供应协同经验知识卡片沉淀','在供应协同相关工作中，成熟做法散落在个人文件中，相似问题发生时仍需从头摸索。这一问题影响了供应协同工作的及时性和可追溯性。','将常见问题、适用条件和解决步骤整理成知识卡片，支持搜索和评价。实施时先在供应协同业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-01-09T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-112','USER-039','供应协同资源预约释放优化','在供应协同相关工作中，资源被预约后未实际使用，其他有需求的人员无法及时获取。这一问题影响了供应协同工作的及时性和可追溯性。','增加签到和自动释放规则，根据实际占用情况动态开放可用资源。实施时先在供应协同业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-01-16T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-113','USER-009','供应协同关键指标趋势分析','在供应协同相关工作中，日常数据只做单次统计，难以识别持续波动和周期性问题。这一问题影响了供应协同工作的及时性和可追溯性。','按周、月展示趋势和同比变化，对连续异常指标自动提示复盘。实施时先在供应协同业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-01-23T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-114','USER-024','供应协同处理结果满意度评价','在供应协同相关工作中，流程结束后缺少使用者反馈，实际效果和改进空间无法量化。这一问题影响了供应协同工作的及时性和可追溯性。','流程完成后邀请相关人员评分并填写原因，低分事项自动进入改善清单。实施时先在供应协同业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-01-30T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-115','USER-033','办公空间管理现场扫码填报优化','在办公空间管理相关工作中，现场情况发生后仍需回到电脑端补录，记录容易延迟或遗漏。这一问题影响了办公空间管理工作的及时性和可追溯性。','设置移动端扫码入口，自动带出业务对象和责任人，提交后同步形成记录。实施时先在办公空间管理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-02-06T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-116','USER-048','办公空间管理关键节点分级提醒','在办公空间管理相关工作中，重要节点依靠个人记忆跟进，繁忙时容易错过处理时限。这一问题影响了办公空间管理工作的及时性和可追溯性。','按事项影响程度设置提醒频次，临期通知负责人，逾期同步提醒管理人员。实施时先在办公空间管理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-02-13T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-117','USER-004','办公空间管理业务状态实时看板','在办公空间管理相关工作中，负责人无法快速掌握整体进展，临时询问和重复统计较多。这一问题影响了办公空间管理工作的及时性和可追溯性。','汇总当前状态、责任人和计划完成时间，用颜色标记风险与阻塞事项。实施时先在办公空间管理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-02-20T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-118','USER-018','办公空间管理异常指标阈值预警','在办公空间管理相关工作中，异常通常在结果复盘时才被发现，缺少提前干预窗口。这一问题影响了办公空间管理工作的及时性和可追溯性。','为关键指标设置合理上下限，触发后自动生成待办并保留处置过程。实施时先在办公空间管理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-02-27T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-119','USER-033','办公空间管理资料标签分类规范','在办公空间管理相关工作中，资料命名和归档方式不统一，新成员查找历史记录耗时。这一问题影响了办公空间管理工作的及时性和可追溯性。','统一命名、标签和归档目录，补充维护责任人和定期清理机制。实施时先在办公空间管理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-03-06T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-120','USER-048','办公空间管理对象二维码追溯','在办公空间管理相关工作中，实物、单据和处理记录之间缺少稳定关联，追溯需要多方核对。这一问题影响了办公空间管理工作的及时性和可追溯性。','为业务对象生成唯一二维码，扫码即可查看来源、状态及完整处理轨迹。实施时先在办公空间管理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-03-13T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-121','USER-004','办公空间管理跨部门交接清单','在办公空间管理相关工作中，跨部门交接边界不清晰，事项经常停留在口头确认阶段。这一问题影响了办公空间管理工作的及时性和可追溯性。','将交接内容拆成可勾选清单，交出方和接收方在线确认后才完成流转。实施时先在办公空间管理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-03-20T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-122','USER-018','办公空间管理超时事项升级处理','在办公空间管理相关工作中，任务逾期后没有自动升级，问题容易长期停留在原处理人处。这一问题影响了办公空间管理工作的及时性和可追溯性。','设置逐级升级规则，超时事项自动转交上级关注并记录升级原因。实施时先在办公空间管理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-03-27T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-123','USER-033','办公空间管理经验知识卡片沉淀','在办公空间管理相关工作中，成熟做法散落在个人文件中，相似问题发生时仍需从头摸索。这一问题影响了办公空间管理工作的及时性和可追溯性。','将常见问题、适用条件和解决步骤整理成知识卡片，支持搜索和评价。实施时先在办公空间管理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-04-03T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-124','USER-048','办公空间管理资源预约释放优化','在办公空间管理相关工作中，资源被预约后未实际使用，其他有需求的人员无法及时获取。这一问题影响了办公空间管理工作的及时性和可追溯性。','增加签到和自动释放规则，根据实际占用情况动态开放可用资源。实施时先在办公空间管理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-04-10T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-125','USER-004','办公空间管理关键指标趋势分析','在办公空间管理相关工作中，日常数据只做单次统计，难以识别持续波动和周期性问题。这一问题影响了办公空间管理工作的及时性和可追溯性。','按周、月展示趋势和同比变化，对连续异常指标自动提示复盘。实施时先在办公空间管理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-04-17T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-126','USER-018','办公空间管理处理结果满意度评价','在办公空间管理相关工作中，流程结束后缺少使用者反馈，实际效果和改进空间无法量化。这一问题影响了办公空间管理工作的及时性和可追溯性。','流程完成后邀请相关人员评分并填写原因，低分事项自动进入改善清单。实施时先在办公空间管理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-04-24T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-127','USER-049','研发知识复用现场扫码填报优化','在研发知识复用相关工作中，现场情况发生后仍需回到电脑端补录，记录容易延迟或遗漏。这一问题影响了研发知识复用工作的及时性和可追溯性。','设置移动端扫码入口，自动带出业务对象和责任人，提交后同步形成记录。实施时先在研发知识复用业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-05-01T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-128','USER-005','研发知识复用关键节点分级提醒','在研发知识复用相关工作中，重要节点依靠个人记忆跟进，繁忙时容易错过处理时限。这一问题影响了研发知识复用工作的及时性和可追溯性。','按事项影响程度设置提醒频次，临期通知负责人，逾期同步提醒管理人员。实施时先在研发知识复用业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-05-08T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-129','USER-019','研发知识复用业务状态实时看板','在研发知识复用相关工作中，负责人无法快速掌握整体进展，临时询问和重复统计较多。这一问题影响了研发知识复用工作的及时性和可追溯性。','汇总当前状态、责任人和计划完成时间，用颜色标记风险与阻塞事项。实施时先在研发知识复用业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-05-15T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-130','USER-034','研发知识复用异常指标阈值预警','在研发知识复用相关工作中，异常通常在结果复盘时才被发现，缺少提前干预窗口。这一问题影响了研发知识复用工作的及时性和可追溯性。','为关键指标设置合理上下限，触发后自动生成待办并保留处置过程。实施时先在研发知识复用业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-05-22T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-131','USER-049','研发知识复用资料标签分类规范','在研发知识复用相关工作中，资料命名和归档方式不统一，新成员查找历史记录耗时。这一问题影响了研发知识复用工作的及时性和可追溯性。','统一命名、标签和归档目录，补充维护责任人和定期清理机制。实施时先在研发知识复用业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-05-29T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-132','USER-005','研发知识复用对象二维码追溯','在研发知识复用相关工作中，实物、单据和处理记录之间缺少稳定关联，追溯需要多方核对。这一问题影响了研发知识复用工作的及时性和可追溯性。','为业务对象生成唯一二维码，扫码即可查看来源、状态及完整处理轨迹。实施时先在研发知识复用业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-06-05T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-133','USER-019','研发知识复用跨部门交接清单','在研发知识复用相关工作中，跨部门交接边界不清晰，事项经常停留在口头确认阶段。这一问题影响了研发知识复用工作的及时性和可追溯性。','将交接内容拆成可勾选清单，交出方和接收方在线确认后才完成流转。实施时先在研发知识复用业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-06-12T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-134','USER-034','研发知识复用超时事项升级处理','在研发知识复用相关工作中，任务逾期后没有自动升级，问题容易长期停留在原处理人处。这一问题影响了研发知识复用工作的及时性和可追溯性。','设置逐级升级规则，超时事项自动转交上级关注并记录升级原因。实施时先在研发知识复用业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-06-19T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-135','USER-049','研发知识复用经验知识卡片沉淀','在研发知识复用相关工作中，成熟做法散落在个人文件中，相似问题发生时仍需从头摸索。这一问题影响了研发知识复用工作的及时性和可追溯性。','将常见问题、适用条件和解决步骤整理成知识卡片，支持搜索和评价。实施时先在研发知识复用业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-06-26T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-136','USER-005','研发知识复用资源预约释放优化','在研发知识复用相关工作中，资源被预约后未实际使用，其他有需求的人员无法及时获取。这一问题影响了研发知识复用工作的及时性和可追溯性。','增加签到和自动释放规则，根据实际占用情况动态开放可用资源。实施时先在研发知识复用业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-07-03T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-137','USER-019','研发知识复用关键指标趋势分析','在研发知识复用相关工作中，日常数据只做单次统计，难以识别持续波动和周期性问题。这一问题影响了研发知识复用工作的及时性和可追溯性。','按周、月展示趋势和同比变化，对连续异常指标自动提示复盘。实施时先在研发知识复用业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-07-10T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-138','USER-034','研发知识复用处理结果满意度评价','在研发知识复用相关工作中，流程结束后缺少使用者反馈，实际效果和改进空间无法量化。这一问题影响了研发知识复用工作的及时性和可追溯性。','流程完成后邀请相关人员评分并填写原因，低分事项自动进入改善清单。实施时先在研发知识复用业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-07-17T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-139','USER-042','客户诉求闭环现场扫码填报优化','在客户诉求闭环相关工作中，现场情况发生后仍需回到电脑端补录，记录容易延迟或遗漏。这一问题影响了客户诉求闭环工作的及时性和可追溯性。','设置移动端扫码入口，自动带出业务对象和责任人，提交后同步形成记录。实施时先在客户诉求闭环业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-07-24T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-140','USER-012','客户诉求闭环关键节点分级提醒','在客户诉求闭环相关工作中，重要节点依靠个人记忆跟进，繁忙时容易错过处理时限。这一问题影响了客户诉求闭环工作的及时性和可追溯性。','按事项影响程度设置提醒频次，临期通知负责人，逾期同步提醒管理人员。实施时先在客户诉求闭环业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-07-31T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-141','USER-027','客户诉求闭环业务状态实时看板','在客户诉求闭环相关工作中，负责人无法快速掌握整体进展，临时询问和重复统计较多。这一问题影响了客户诉求闭环工作的及时性和可追溯性。','汇总当前状态、责任人和计划完成时间，用颜色标记风险与阻塞事项。实施时先在客户诉求闭环业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-08-07T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-142','USER-042','客户诉求闭环异常指标阈值预警','在客户诉求闭环相关工作中，异常通常在结果复盘时才被发现，缺少提前干预窗口。这一问题影响了客户诉求闭环工作的及时性和可追溯性。','为关键指标设置合理上下限，触发后自动生成待办并保留处置过程。实施时先在客户诉求闭环业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-08-14T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-143','USER-012','客户诉求闭环资料标签分类规范','在客户诉求闭环相关工作中，资料命名和归档方式不统一，新成员查找历史记录耗时。这一问题影响了客户诉求闭环工作的及时性和可追溯性。','统一命名、标签和归档目录，补充维护责任人和定期清理机制。实施时先在客户诉求闭环业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-08-21T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-144','USER-027','客户诉求闭环对象二维码追溯','在客户诉求闭环相关工作中，实物、单据和处理记录之间缺少稳定关联，追溯需要多方核对。这一问题影响了客户诉求闭环工作的及时性和可追溯性。','为业务对象生成唯一二维码，扫码即可查看来源、状态及完整处理轨迹。实施时先在客户诉求闭环业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-01-06T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-145','USER-042','客户诉求闭环跨部门交接清单','在客户诉求闭环相关工作中，跨部门交接边界不清晰，事项经常停留在口头确认阶段。这一问题影响了客户诉求闭环工作的及时性和可追溯性。','将交接内容拆成可勾选清单，交出方和接收方在线确认后才完成流转。实施时先在客户诉求闭环业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-01-13T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-146','USER-012','客户诉求闭环超时事项升级处理','在客户诉求闭环相关工作中，任务逾期后没有自动升级，问题容易长期停留在原处理人处。这一问题影响了客户诉求闭环工作的及时性和可追溯性。','设置逐级升级规则，超时事项自动转交上级关注并记录升级原因。实施时先在客户诉求闭环业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-01-20T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-147','USER-027','客户诉求闭环经验知识卡片沉淀','在客户诉求闭环相关工作中，成熟做法散落在个人文件中，相似问题发生时仍需从头摸索。这一问题影响了客户诉求闭环工作的及时性和可追溯性。','将常见问题、适用条件和解决步骤整理成知识卡片，支持搜索和评价。实施时先在客户诉求闭环业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-01-27T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-148','USER-042','客户诉求闭环资源预约释放优化','在客户诉求闭环相关工作中，资源被预约后未实际使用，其他有需求的人员无法及时获取。这一问题影响了客户诉求闭环工作的及时性和可追溯性。','增加签到和自动释放规则，根据实际占用情况动态开放可用资源。实施时先在客户诉求闭环业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-02-03T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-149','USER-012','客户诉求闭环关键指标趋势分析','在客户诉求闭环相关工作中，日常数据只做单次统计，难以识别持续波动和周期性问题。这一问题影响了客户诉求闭环工作的及时性和可追溯性。','按周、月展示趋势和同比变化，对连续异常指标自动提示复盘。实施时先在客户诉求闭环业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-02-10T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-150','USER-027','客户诉求闭环处理结果满意度评价','在客户诉求闭环相关工作中，流程结束后缺少使用者反馈，实际效果和改进空间无法量化。这一问题影响了客户诉求闭环工作的及时性和可追溯性。','流程完成后邀请相关人员评分并填写原因，低分事项自动进入改善清单。实施时先在客户诉求闭环业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-02-17T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-151','USER-008','市场活动评估现场扫码填报优化','在市场活动评估相关工作中，现场情况发生后仍需回到电脑端补录，记录容易延迟或遗漏。这一问题影响了市场活动评估工作的及时性和可追溯性。','设置移动端扫码入口，自动带出业务对象和责任人，提交后同步形成记录。实施时先在市场活动评估业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-02-24T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-152','USER-022','市场活动评估关键节点分级提醒','在市场活动评估相关工作中，重要节点依靠个人记忆跟进，繁忙时容易错过处理时限。这一问题影响了市场活动评估工作的及时性和可追溯性。','按事项影响程度设置提醒频次，临期通知负责人，逾期同步提醒管理人员。实施时先在市场活动评估业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-03-03T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-153','USER-037','市场活动评估业务状态实时看板','在市场活动评估相关工作中，负责人无法快速掌握整体进展，临时询问和重复统计较多。这一问题影响了市场活动评估工作的及时性和可追溯性。','汇总当前状态、责任人和计划完成时间，用颜色标记风险与阻塞事项。实施时先在市场活动评估业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-03-10T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-154','USER-008','市场活动评估异常指标阈值预警','在市场活动评估相关工作中，异常通常在结果复盘时才被发现，缺少提前干预窗口。这一问题影响了市场活动评估工作的及时性和可追溯性。','为关键指标设置合理上下限，触发后自动生成待办并保留处置过程。实施时先在市场活动评估业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-03-17T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-155','USER-022','市场活动评估资料标签分类规范','在市场活动评估相关工作中，资料命名和归档方式不统一，新成员查找历史记录耗时。这一问题影响了市场活动评估工作的及时性和可追溯性。','统一命名、标签和归档目录，补充维护责任人和定期清理机制。实施时先在市场活动评估业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-03-24T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-156','USER-037','市场活动评估对象二维码追溯','在市场活动评估相关工作中，实物、单据和处理记录之间缺少稳定关联，追溯需要多方核对。这一问题影响了市场活动评估工作的及时性和可追溯性。','为业务对象生成唯一二维码，扫码即可查看来源、状态及完整处理轨迹。实施时先在市场活动评估业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-03-31T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-157','USER-008','市场活动评估跨部门交接清单','在市场活动评估相关工作中，跨部门交接边界不清晰，事项经常停留在口头确认阶段。这一问题影响了市场活动评估工作的及时性和可追溯性。','将交接内容拆成可勾选清单，交出方和接收方在线确认后才完成流转。实施时先在市场活动评估业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-04-07T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-158','USER-022','市场活动评估超时事项升级处理','在市场活动评估相关工作中，任务逾期后没有自动升级，问题容易长期停留在原处理人处。这一问题影响了市场活动评估工作的及时性和可追溯性。','设置逐级升级规则，超时事项自动转交上级关注并记录升级原因。实施时先在市场活动评估业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-04-14T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-159','USER-037','市场活动评估经验知识卡片沉淀','在市场活动评估相关工作中，成熟做法散落在个人文件中，相似问题发生时仍需从头摸索。这一问题影响了市场活动评估工作的及时性和可追溯性。','将常见问题、适用条件和解决步骤整理成知识卡片，支持搜索和评价。实施时先在市场活动评估业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-04-21T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-160','USER-008','市场活动评估资源预约释放优化','在市场活动评估相关工作中，资源被预约后未实际使用，其他有需求的人员无法及时获取。这一问题影响了市场活动评估工作的及时性和可追溯性。','增加签到和自动释放规则，根据实际占用情况动态开放可用资源。实施时先在市场活动评估业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-04-28T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-161','USER-022','市场活动评估关键指标趋势分析','在市场活动评估相关工作中，日常数据只做单次统计，难以识别持续波动和周期性问题。这一问题影响了市场活动评估工作的及时性和可追溯性。','按周、月展示趋势和同比变化，对连续异常指标自动提示复盘。实施时先在市场活动评估业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-05-05T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-162','USER-037','市场活动评估处理结果满意度评价','在市场活动评估相关工作中，流程结束后缺少使用者反馈，实际效果和改进空间无法量化。这一问题影响了市场活动评估工作的及时性和可追溯性。','流程完成后邀请相关人员评分并填写原因，低分事项自动进入改善清单。实施时先在市场活动评估业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-05-12T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-163','USER-025','费用审核提效现场扫码填报优化','在费用审核提效相关工作中，现场情况发生后仍需回到电脑端补录，记录容易延迟或遗漏。这一问题影响了费用审核提效工作的及时性和可追溯性。','设置移动端扫码入口，自动带出业务对象和责任人，提交后同步形成记录。实施时先在费用审核提效业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-05-19T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-164','USER-040','费用审核提效关键节点分级提醒','在费用审核提效相关工作中，重要节点依靠个人记忆跟进，繁忙时容易错过处理时限。这一问题影响了费用审核提效工作的及时性和可追溯性。','按事项影响程度设置提醒频次，临期通知负责人，逾期同步提醒管理人员。实施时先在费用审核提效业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-05-26T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-165','USER-010','费用审核提效业务状态实时看板','在费用审核提效相关工作中，负责人无法快速掌握整体进展，临时询问和重复统计较多。这一问题影响了费用审核提效工作的及时性和可追溯性。','汇总当前状态、责任人和计划完成时间，用颜色标记风险与阻塞事项。实施时先在费用审核提效业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-06-02T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-166','USER-025','费用审核提效异常指标阈值预警','在费用审核提效相关工作中，异常通常在结果复盘时才被发现，缺少提前干预窗口。这一问题影响了费用审核提效工作的及时性和可追溯性。','为关键指标设置合理上下限，触发后自动生成待办并保留处置过程。实施时先在费用审核提效业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-06-09T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-167','USER-040','费用审核提效资料标签分类规范','在费用审核提效相关工作中，资料命名和归档方式不统一，新成员查找历史记录耗时。这一问题影响了费用审核提效工作的及时性和可追溯性。','统一命名、标签和归档目录，补充维护责任人和定期清理机制。实施时先在费用审核提效业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-06-16T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-168','USER-010','费用审核提效对象二维码追溯','在费用审核提效相关工作中，实物、单据和处理记录之间缺少稳定关联，追溯需要多方核对。这一问题影响了费用审核提效工作的及时性和可追溯性。','为业务对象生成唯一二维码，扫码即可查看来源、状态及完整处理轨迹。实施时先在费用审核提效业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-06-23T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-169','USER-025','费用审核提效跨部门交接清单','在费用审核提效相关工作中，跨部门交接边界不清晰，事项经常停留在口头确认阶段。这一问题影响了费用审核提效工作的及时性和可追溯性。','将交接内容拆成可勾选清单，交出方和接收方在线确认后才完成流转。实施时先在费用审核提效业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-06-30T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-170','USER-040','费用审核提效超时事项升级处理','在费用审核提效相关工作中，任务逾期后没有自动升级，问题容易长期停留在原处理人处。这一问题影响了费用审核提效工作的及时性和可追溯性。','设置逐级升级规则，超时事项自动转交上级关注并记录升级原因。实施时先在费用审核提效业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-07-07T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-171','USER-010','费用审核提效经验知识卡片沉淀','在费用审核提效相关工作中，成熟做法散落在个人文件中，相似问题发生时仍需从头摸索。这一问题影响了费用审核提效工作的及时性和可追溯性。','将常见问题、适用条件和解决步骤整理成知识卡片，支持搜索和评价。实施时先在费用审核提效业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-07-14T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-172','USER-025','费用审核提效资源预约释放优化','在费用审核提效相关工作中，资源被预约后未实际使用，其他有需求的人员无法及时获取。这一问题影响了费用审核提效工作的及时性和可追溯性。','增加签到和自动释放规则，根据实际占用情况动态开放可用资源。实施时先在费用审核提效业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-07-21T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-173','USER-040','费用审核提效关键指标趋势分析','在费用审核提效相关工作中，日常数据只做单次统计，难以识别持续波动和周期性问题。这一问题影响了费用审核提效工作的及时性和可追溯性。','按周、月展示趋势和同比变化，对连续异常指标自动提示复盘。实施时先在费用审核提效业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-07-28T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-174','USER-010','费用审核提效处理结果满意度评价','在费用审核提效相关工作中，流程结束后缺少使用者反馈，实际效果和改进空间无法量化。这一问题影响了费用审核提效工作的及时性和可追溯性。','流程完成后邀请相关人员评分并填写原因，低分事项自动进入改善清单。实施时先在费用审核提效业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-08-04T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-175','USER-041','人才培养现场扫码填报优化','在人才培养相关工作中，现场情况发生后仍需回到电脑端补录，记录容易延迟或遗漏。这一问题影响了人才培养工作的及时性和可追溯性。','设置移动端扫码入口，自动带出业务对象和责任人，提交后同步形成记录。实施时先在人才培养业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-08-11T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-176','USER-011','人才培养关键节点分级提醒','在人才培养相关工作中，重要节点依靠个人记忆跟进，繁忙时容易错过处理时限。这一问题影响了人才培养工作的及时性和可追溯性。','按事项影响程度设置提醒频次，临期通知负责人，逾期同步提醒管理人员。实施时先在人才培养业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-08-18T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-177','USER-026','人才培养业务状态实时看板','在人才培养相关工作中，负责人无法快速掌握整体进展，临时询问和重复统计较多。这一问题影响了人才培养工作的及时性和可追溯性。','汇总当前状态、责任人和计划完成时间，用颜色标记风险与阻塞事项。实施时先在人才培养业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-01-03T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-178','USER-041','人才培养异常指标阈值预警','在人才培养相关工作中，异常通常在结果复盘时才被发现，缺少提前干预窗口。这一问题影响了人才培养工作的及时性和可追溯性。','为关键指标设置合理上下限，触发后自动生成待办并保留处置过程。实施时先在人才培养业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-01-10T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-179','USER-011','人才培养资料标签分类规范','在人才培养相关工作中，资料命名和归档方式不统一，新成员查找历史记录耗时。这一问题影响了人才培养工作的及时性和可追溯性。','统一命名、标签和归档目录，补充维护责任人和定期清理机制。实施时先在人才培养业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-01-17T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-180','USER-026','人才培养对象二维码追溯','在人才培养相关工作中，实物、单据和处理记录之间缺少稳定关联，追溯需要多方核对。这一问题影响了人才培养工作的及时性和可追溯性。','为业务对象生成唯一二维码，扫码即可查看来源、状态及完整处理轨迹。实施时先在人才培养业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-01-24T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-181','USER-041','人才培养跨部门交接清单','在人才培养相关工作中，跨部门交接边界不清晰，事项经常停留在口头确认阶段。这一问题影响了人才培养工作的及时性和可追溯性。','将交接内容拆成可勾选清单，交出方和接收方在线确认后才完成流转。实施时先在人才培养业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-01-31T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-182','USER-011','人才培养超时事项升级处理','在人才培养相关工作中，任务逾期后没有自动升级，问题容易长期停留在原处理人处。这一问题影响了人才培养工作的及时性和可追溯性。','设置逐级升级规则，超时事项自动转交上级关注并记录升级原因。实施时先在人才培养业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-02-07T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-183','USER-026','人才培养经验知识卡片沉淀','在人才培养相关工作中，成熟做法散落在个人文件中，相似问题发生时仍需从头摸索。这一问题影响了人才培养工作的及时性和可追溯性。','将常见问题、适用条件和解决步骤整理成知识卡片，支持搜索和评价。实施时先在人才培养业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-02-14T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-184','USER-041','人才培养资源预约释放优化','在人才培养相关工作中，资源被预约后未实际使用，其他有需求的人员无法及时获取。这一问题影响了人才培养工作的及时性和可追溯性。','增加签到和自动释放规则，根据实际占用情况动态开放可用资源。实施时先在人才培养业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-02-21T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-185','USER-011','人才培养关键指标趋势分析','在人才培养相关工作中，日常数据只做单次统计，难以识别持续波动和周期性问题。这一问题影响了人才培养工作的及时性和可追溯性。','按周、月展示趋势和同比变化，对连续异常指标自动提示复盘。实施时先在人才培养业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-02-28T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-186','USER-026','人才培养处理结果满意度评价','在人才培养相关工作中，流程结束后缺少使用者反馈，实际效果和改进空间无法量化。这一问题影响了人才培养工作的及时性和可追溯性。','流程完成后邀请相关人员评分并填写原因，低分事项自动进入改善清单。实施时先在人才培养业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-03-07T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-187','USER-013','仓储周转现场扫码填报优化','在仓储周转相关工作中，现场情况发生后仍需回到电脑端补录，记录容易延迟或遗漏。这一问题影响了仓储周转工作的及时性和可追溯性。','设置移动端扫码入口，自动带出业务对象和责任人，提交后同步形成记录。实施时先在仓储周转业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-03-14T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-188','USER-028','仓储周转关键节点分级提醒','在仓储周转相关工作中，重要节点依靠个人记忆跟进，繁忙时容易错过处理时限。这一问题影响了仓储周转工作的及时性和可追溯性。','按事项影响程度设置提醒频次，临期通知负责人，逾期同步提醒管理人员。实施时先在仓储周转业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-03-21T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-189','USER-043','仓储周转业务状态实时看板','在仓储周转相关工作中，负责人无法快速掌握整体进展，临时询问和重复统计较多。这一问题影响了仓储周转工作的及时性和可追溯性。','汇总当前状态、责任人和计划完成时间，用颜色标记风险与阻塞事项。实施时先在仓储周转业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-03-28T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-190','USER-013','仓储周转异常指标阈值预警','在仓储周转相关工作中，异常通常在结果复盘时才被发现，缺少提前干预窗口。这一问题影响了仓储周转工作的及时性和可追溯性。','为关键指标设置合理上下限，触发后自动生成待办并保留处置过程。实施时先在仓储周转业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-04-04T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-191','USER-028','仓储周转资料标签分类规范','在仓储周转相关工作中，资料命名和归档方式不统一，新成员查找历史记录耗时。这一问题影响了仓储周转工作的及时性和可追溯性。','统一命名、标签和归档目录，补充维护责任人和定期清理机制。实施时先在仓储周转业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-04-11T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-192','USER-043','仓储周转对象二维码追溯','在仓储周转相关工作中，实物、单据和处理记录之间缺少稳定关联，追溯需要多方核对。这一问题影响了仓储周转工作的及时性和可追溯性。','为业务对象生成唯一二维码，扫码即可查看来源、状态及完整处理轨迹。实施时先在仓储周转业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-04-18T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-193','USER-013','仓储周转跨部门交接清单','在仓储周转相关工作中，跨部门交接边界不清晰，事项经常停留在口头确认阶段。这一问题影响了仓储周转工作的及时性和可追溯性。','将交接内容拆成可勾选清单，交出方和接收方在线确认后才完成流转。实施时先在仓储周转业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-04-25T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-194','USER-028','仓储周转超时事项升级处理','在仓储周转相关工作中，任务逾期后没有自动升级，问题容易长期停留在原处理人处。这一问题影响了仓储周转工作的及时性和可追溯性。','设置逐级升级规则，超时事项自动转交上级关注并记录升级原因。实施时先在仓储周转业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-05-02T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-195','USER-043','仓储周转经验知识卡片沉淀','在仓储周转相关工作中，成熟做法散落在个人文件中，相似问题发生时仍需从头摸索。这一问题影响了仓储周转工作的及时性和可追溯性。','将常见问题、适用条件和解决步骤整理成知识卡片，支持搜索和评价。实施时先在仓储周转业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-05-09T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-196','USER-013','仓储周转资源预约释放优化','在仓储周转相关工作中，资源被预约后未实际使用，其他有需求的人员无法及时获取。这一问题影响了仓储周转工作的及时性和可追溯性。','增加签到和自动释放规则，根据实际占用情况动态开放可用资源。实施时先在仓储周转业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-05-16T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-197','USER-028','仓储周转关键指标趋势分析','在仓储周转相关工作中，日常数据只做单次统计，难以识别持续波动和周期性问题。这一问题影响了仓储周转工作的及时性和可追溯性。','按周、月展示趋势和同比变化，对连续异常指标自动提示复盘。实施时先在仓储周转业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-05-23T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-198','USER-043','仓储周转处理结果满意度评价','在仓储周转相关工作中，流程结束后缺少使用者反馈，实际效果和改进空间无法量化。这一问题影响了仓储周转工作的及时性和可追溯性。','流程完成后邀请相关人员评分并填写原因，低分事项自动进入改善清单。实施时先在仓储周转业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-05-30T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-199','USER-029','账号安全治理现场扫码填报优化','在账号安全治理相关工作中，现场情况发生后仍需回到电脑端补录，记录容易延迟或遗漏。这一问题影响了账号安全治理工作的及时性和可追溯性。','设置移动端扫码入口，自动带出业务对象和责任人，提交后同步形成记录。实施时先在账号安全治理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-06-06T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-200','USER-044','账号安全治理关键节点分级提醒','在账号安全治理相关工作中，重要节点依靠个人记忆跟进，繁忙时容易错过处理时限。这一问题影响了账号安全治理工作的及时性和可追溯性。','按事项影响程度设置提醒频次，临期通知负责人，逾期同步提醒管理人员。实施时先在账号安全治理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-06-13T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-201','USER-014','账号安全治理业务状态实时看板','在账号安全治理相关工作中，负责人无法快速掌握整体进展，临时询问和重复统计较多。这一问题影响了账号安全治理工作的及时性和可追溯性。','汇总当前状态、责任人和计划完成时间，用颜色标记风险与阻塞事项。实施时先在账号安全治理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-06-20T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-202','USER-029','账号安全治理异常指标阈值预警','在账号安全治理相关工作中，异常通常在结果复盘时才被发现，缺少提前干预窗口。这一问题影响了账号安全治理工作的及时性和可追溯性。','为关键指标设置合理上下限，触发后自动生成待办并保留处置过程。实施时先在账号安全治理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-06-27T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-203','USER-044','账号安全治理资料标签分类规范','在账号安全治理相关工作中，资料命名和归档方式不统一，新成员查找历史记录耗时。这一问题影响了账号安全治理工作的及时性和可追溯性。','统一命名、标签和归档目录，补充维护责任人和定期清理机制。实施时先在账号安全治理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-07-04T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-204','USER-014','账号安全治理对象二维码追溯','在账号安全治理相关工作中，实物、单据和处理记录之间缺少稳定关联，追溯需要多方核对。这一问题影响了账号安全治理工作的及时性和可追溯性。','为业务对象生成唯一二维码，扫码即可查看来源、状态及完整处理轨迹。实施时先在账号安全治理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-07-11T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-205','USER-029','账号安全治理跨部门交接清单','在账号安全治理相关工作中，跨部门交接边界不清晰，事项经常停留在口头确认阶段。这一问题影响了账号安全治理工作的及时性和可追溯性。','将交接内容拆成可勾选清单，交出方和接收方在线确认后才完成流转。实施时先在账号安全治理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-07-18T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-206','USER-044','账号安全治理超时事项升级处理','在账号安全治理相关工作中，任务逾期后没有自动升级，问题容易长期停留在原处理人处。这一问题影响了账号安全治理工作的及时性和可追溯性。','设置逐级升级规则，超时事项自动转交上级关注并记录升级原因。实施时先在账号安全治理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-07-25T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-207','USER-014','账号安全治理经验知识卡片沉淀','在账号安全治理相关工作中，成熟做法散落在个人文件中，相似问题发生时仍需从头摸索。这一问题影响了账号安全治理工作的及时性和可追溯性。','将常见问题、适用条件和解决步骤整理成知识卡片，支持搜索和评价。实施时先在账号安全治理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-08-01T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-208','USER-029','账号安全治理资源预约释放优化','在账号安全治理相关工作中，资源被预约后未实际使用，其他有需求的人员无法及时获取。这一问题影响了账号安全治理工作的及时性和可追溯性。','增加签到和自动释放规则，根据实际占用情况动态开放可用资源。实施时先在账号安全治理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-08-08T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-209','USER-044','账号安全治理关键指标趋势分析','在账号安全治理相关工作中，日常数据只做单次统计，难以识别持续波动和周期性问题。这一问题影响了账号安全治理工作的及时性和可追溯性。','按周、月展示趋势和同比变化，对连续异常指标自动提示复盘。实施时先在账号安全治理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-08-15T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-210','USER-014','账号安全治理处理结果满意度评价','在账号安全治理相关工作中，流程结束后缺少使用者反馈，实际效果和改进空间无法量化。这一问题影响了账号安全治理工作的及时性和可追溯性。','流程完成后邀请相关人员评分并填写原因，低分事项自动进入改善清单。实施时先在账号安全治理业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-08-22T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-211','USER-045','工程现场协同现场扫码填报优化','在工程现场协同相关工作中，现场情况发生后仍需回到电脑端补录，记录容易延迟或遗漏。这一问题影响了工程现场协同工作的及时性和可追溯性。','设置移动端扫码入口，自动带出业务对象和责任人，提交后同步形成记录。实施时先在工程现场协同业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-01-07T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-212','USER-015','工程现场协同关键节点分级提醒','在工程现场协同相关工作中，重要节点依靠个人记忆跟进，繁忙时容易错过处理时限。这一问题影响了工程现场协同工作的及时性和可追溯性。','按事项影响程度设置提醒频次，临期通知负责人，逾期同步提醒管理人员。实施时先在工程现场协同业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-01-14T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-213','USER-030','工程现场协同业务状态实时看板','在工程现场协同相关工作中，负责人无法快速掌握整体进展，临时询问和重复统计较多。这一问题影响了工程现场协同工作的及时性和可追溯性。','汇总当前状态、责任人和计划完成时间，用颜色标记风险与阻塞事项。实施时先在工程现场协同业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-01-21T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-214','USER-045','工程现场协同异常指标阈值预警','在工程现场协同相关工作中，异常通常在结果复盘时才被发现，缺少提前干预窗口。这一问题影响了工程现场协同工作的及时性和可追溯性。','为关键指标设置合理上下限，触发后自动生成待办并保留处置过程。实施时先在工程现场协同业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-01-28T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-215','USER-015','工程现场协同资料标签分类规范','在工程现场协同相关工作中，资料命名和归档方式不统一，新成员查找历史记录耗时。这一问题影响了工程现场协同工作的及时性和可追溯性。','统一命名、标签和归档目录，补充维护责任人和定期清理机制。实施时先在工程现场协同业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-02-04T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-216','USER-030','工程现场协同对象二维码追溯','在工程现场协同相关工作中，实物、单据和处理记录之间缺少稳定关联，追溯需要多方核对。这一问题影响了工程现场协同工作的及时性和可追溯性。','为业务对象生成唯一二维码，扫码即可查看来源、状态及完整处理轨迹。实施时先在工程现场协同业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-02-11T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-217','USER-045','工程现场协同跨部门交接清单','在工程现场协同相关工作中，跨部门交接边界不清晰，事项经常停留在口头确认阶段。这一问题影响了工程现场协同工作的及时性和可追溯性。','将交接内容拆成可勾选清单，交出方和接收方在线确认后才完成流转。实施时先在工程现场协同业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-02-18T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-218','USER-015','工程现场协同超时事项升级处理','在工程现场协同相关工作中，任务逾期后没有自动升级，问题容易长期停留在原处理人处。这一问题影响了工程现场协同工作的及时性和可追溯性。','设置逐级升级规则，超时事项自动转交上级关注并记录升级原因。实施时先在工程现场协同业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-02-25T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-219','USER-030','工程现场协同经验知识卡片沉淀','在工程现场协同相关工作中，成熟做法散落在个人文件中，相似问题发生时仍需从头摸索。这一问题影响了工程现场协同工作的及时性和可追溯性。','将常见问题、适用条件和解决步骤整理成知识卡片，支持搜索和评价。实施时先在工程现场协同业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待初审','2026-03-04T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-220','USER-045','工程现场协同资源预约释放优化','在工程现场协同相关工作中，资源被预约后未实际使用，其他有需求的人员无法及时获取。这一问题影响了工程现场协同工作的及时性和可追溯性。','增加签到和自动释放规则，根据实际占用情况动态开放可用资源。实施时先在工程现场协同业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','待终审','2026-03-11T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-221','USER-015','工程现场协同关键指标趋势分析','在工程现场协同相关工作中，日常数据只做单次统计，难以识别持续波动和周期性问题。这一问题影响了工程现场协同工作的及时性和可追溯性。','按周、月展示趋势和同比变化，对连续异常指标自动提示复盘。实施时先在工程现场协同业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已采纳','2026-03-18T00:00:00.000Z');
+INSERT INTO "ideas" VALUES('MI-2026-222','USER-030','工程现场协同处理结果满意度评价','在工程现场协同相关工作中，流程结束后缺少使用者反馈，实际效果和改进空间无法量化。这一问题影响了工程现场协同工作的及时性和可追溯性。','流程完成后邀请相关人员评分并填写原因，低分事项自动进入改善清单。实施时先在工程现场协同业务范围内试点，按处理时长、异常数量和使用反馈评估效果。','已驳回','2026-03-25T00:00:00.000Z');
+CREATE TABLE point_records (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  department_id TEXT NOT NULL,
+  idea_id TEXT,
+  lifecycle_record_id TEXT,
+  points INTEGER NOT NULL,
+  reason TEXT NOT NULL,
+  source_type TEXT NOT NULL CHECK (source_type IN ('历史结转', '提交建议', '初审通过', '终审通过', '人工调整')),
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (department_id) REFERENCES departments(id),
+  FOREIGN KEY (idea_id) REFERENCES ideas(id),
+  FOREIGN KEY (lifecycle_record_id) REFERENCES idea_lifecycle_records(id)
+);
+INSERT INTO "point_records" VALUES('history-1','USER-002','DEPT-002',NULL,NULL,240,'历史积分结转','历史结转','2026-08-01T00:00:00');
+INSERT INTO "point_records" VALUES('history-2','USER-003','DEPT-003',NULL,NULL,190,'历史积分结转','历史结转','2026-08-01T00:00:00');
+INSERT INTO "point_records" VALUES('history-3','USER-004','DEPT-004',NULL,NULL,165,'历史积分结转','历史结转','2026-08-01T00:00:00');
+INSERT INTO "point_records" VALUES('history-4','USER-005','DEPT-005',NULL,NULL,158,'历史积分结转','历史结转','2026-08-01T00:00:00');
+INSERT INTO "point_records" VALUES('history-5','USER-006','DEPT-006',NULL,NULL,146,'历史积分结转','历史结转','2026-08-01T00:00:00');
+INSERT INTO "point_records" VALUES('history-6','USER-007','DEPT-007',NULL,NULL,138,'历史积分结转','历史结转','2026-08-01T00:00:00');
+INSERT INTO "point_records" VALUES('history-7','USER-008','DEPT-008',NULL,NULL,129,'历史积分结转','历史结转','2026-08-01T00:00:00');
+INSERT INTO "point_records" VALUES('history-8','USER-001','DEPT-001',NULL,NULL,120,'历史积分结转','历史结转','2026-08-01T00:00:00');
+INSERT INTO "point_records" VALUES('history-9','USER-009','DEPT-009',NULL,NULL,112,'历史积分结转','历史结转','2026-08-01T00:00:00');
+INSERT INTO "point_records" VALUES('history-10','USER-010','DEPT-010',NULL,NULL,105,'历史积分结转','历史结转','2026-08-01T00:00:00');
+CREATE TABLE users (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  role TEXT NOT NULL CHECK (role IN ('灵感捕手', '建议初审', '建议终审')),
+  department_id TEXT NOT NULL,
+  enabled INTEGER NOT NULL DEFAULT 1 CHECK (enabled IN (0, 1)),
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (department_id) REFERENCES departments(id)
+);
+INSERT INTO "users" VALUES('USER-001','林澄','灵感捕手','DEPT-001',1,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-002','周文清','灵感捕手','DEPT-002',1,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-003','陈嘉言','建议初审','DEPT-003',1,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-004','顾宁','建议终审','DEPT-004',1,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-005','许知远','灵感捕手','DEPT-005',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-006','沈悦','灵感捕手','DEPT-006',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-007','赵一帆','灵感捕手','DEPT-007',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-008','苏宁川','灵感捕手','DEPT-008',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-009','唐若溪','灵感捕手','DEPT-009',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-010','陆明','灵感捕手','DEPT-010',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-011','叶青','灵感捕手','DEPT-011',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-012','韩雪','灵感捕手','DEPT-012',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-013','方启明','灵感捕手','DEPT-013',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-014','吴桐','灵感捕手','DEPT-014',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-015','谢安然','灵感捕手','DEPT-015',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-016','蒋一鸣','灵感捕手','DEPT-002',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-017','宋雨欣','灵感捕手','DEPT-003',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-018','邵文博','灵感捕手','DEPT-004',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-019','章若楠','灵感捕手','DEPT-005',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-020','程浩','灵感捕手','DEPT-006',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-021','袁佳','灵感捕手','DEPT-007',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-022','夏晨','灵感捕手','DEPT-008',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-023','秦朗','灵感捕手','DEPT-001',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-024','罗静','灵感捕手','DEPT-009',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-025','高远','灵感捕手','DEPT-010',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-026','任思齐','灵感捕手','DEPT-011',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-027','杜欣怡','灵感捕手','DEPT-012',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-028','魏然','灵感捕手','DEPT-013',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-029','潘越','灵感捕手','DEPT-014',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-030','梁辰','灵感捕手','DEPT-015',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-031','贺川','灵感捕手','DEPT-002',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-032','孟琪','灵感捕手','DEPT-003',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-033','白露','灵感捕手','DEPT-004',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-034','江一诺','灵感捕手','DEPT-005',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-035','康宁','灵感捕手','DEPT-006',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-036','傅航','灵感捕手','DEPT-007',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-037','乔薇','灵感捕手','DEPT-008',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-038','戴维','灵感捕手','DEPT-001',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-039','毛晓彤','灵感捕手','DEPT-009',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-040','石磊','灵感捕手','DEPT-010',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-041','曹悦','灵感捕手','DEPT-011',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-042','金睿','灵感捕手','DEPT-012',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-043','郑凯','灵感捕手','DEPT-013',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-044','侯宁','灵感捕手','DEPT-014',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-045','彭宇','灵感捕手','DEPT-015',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-046','卢嘉','灵感捕手','DEPT-002',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-047','崔璐','灵感捕手','DEPT-003',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-048','钟毅','灵感捕手','DEPT-004',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-049','范晨曦','灵感捕手','DEPT-005',0,'2026-08-25T00:00:00.000Z');
+INSERT INTO "users" VALUES('USER-050','武洁','灵感捕手','DEPT-006',0,'2026-08-25T00:00:00.000Z');
+CREATE INDEX idx_users_department ON users(department_id);
+CREATE INDEX idx_ideas_author ON ideas(author_id);
+CREATE INDEX idx_ideas_status ON ideas(status);
+CREATE INDEX idx_lifecycle_idea ON idea_lifecycle_records(idea_id, updated_at);
+CREATE INDEX idx_comments_idea ON comments(idea_id, created_at);
+CREATE INDEX idx_actions_idea ON idea_user_actions(idea_id, action_type);
+CREATE INDEX idx_points_user ON point_records(user_id, created_at);
+CREATE INDEX idx_points_department ON point_records(department_id, created_at);
+CREATE TRIGGER comments_only_for_adopted_before_insert
+BEFORE INSERT ON comments
+WHEN (SELECT status FROM ideas WHERE id = NEW.idea_id) <> '已采纳'
+BEGIN SELECT RAISE(ABORT, '只有已采纳建议可以评论'); END;
+CREATE TRIGGER actions_only_for_adopted_before_insert
+BEFORE INSERT ON idea_user_actions
+WHEN (SELECT status FROM ideas WHERE id = NEW.idea_id) <> '已采纳'
+BEGIN SELECT RAISE(ABORT, '只有已采纳建议可以点赞或收藏'); END;
+COMMIT;
+PRAGMA foreign_keys = ON;

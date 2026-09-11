@@ -1,0 +1,17 @@
+README.md
+pyproject.toml
+app/__init__.py
+app/config.py
+app/graph.py
+app/intent.py
+app/main.py
+app/my_ideas.py
+app/repositories.py
+app/schemas.py
+micro_innovation_ai_service.egg-info/PKG-INFO
+micro_innovation_ai_service.egg-info/SOURCES.txt
+micro_innovation_ai_service.egg-info/dependency_links.txt
+micro_innovation_ai_service.egg-info/requires.txt
+micro_innovation_ai_service.egg-info/top_level.txt
+tests/test_intent.py
+tests/test_my_ideas.py
