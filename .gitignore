@@ -38,3 +38,10 @@ next-env.d.ts
 /work/
 /.site-package-staging/
 /site-bundle.tar.gz
+
+*.log
+
+*.log
+
+# 运行日志
+*.log
